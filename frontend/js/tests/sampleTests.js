@@ -61,3 +61,45 @@ testUtils.createTestButton("Test Subir Sample (Simulado)", async (btn) => {
     testUtils.log(data);
     if (response.ok) testUtils.setSuccess(btn);
 });
+testUtils.createTestButton("Test Eliminar Sample Dinámico", async (btn) => {
+    await okLogin();
+    const token = localStorage.getItem('test_token');
+    const authHeader = { 'Authorization': `Bearer ${token}` };
+
+    const listResponse = await fetch('/api/samples/my-samples', { headers: authHeader });
+    const samples = await listResponse.json();
+
+    if (!Array.isArray(samples) || samples.length === 0) {
+        testUtils.log("ADVERTENCIA: No hay samples para eliminar. Ejecute primero 'Test Subir Sample (Simulado)'.", true);
+        btn.className = "w3-button w3-block w3-section w3-round w3-orange";
+        return;
+    }
+
+    const targetId = samples[0].id;
+    testUtils.log(`Intentando eliminar el sample con ID: ${targetId}`);
+
+    const response = await fetch(`/api/samples/${targetId}`, {
+        method: 'DELETE',
+        headers: authHeader
+    });
+    const data = await response.json();
+    testUtils.log({ idEliminado: targetId, status: response.status, respuesta: data });
+    if (response.ok) testUtils.setSuccess(btn);
+});
+testUtils.createTestButton("Test Subir Sample - Error por Datos Faltantes", async (btn) => {
+    await okLogin();
+    const token = localStorage.getItem('test_token');
+
+    const formData = new FormData();
+    const blob = new Blob(["Simulated Audio Content"], { type: 'audio/wav' });
+    formData.append('audioFile', blob, 'SIN_DATOS.wav');   // faltan category y display_name
+
+    const response = await fetch('/api/samples/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+    });
+    const data = await response.json();
+    testUtils.log({ status: response.status, respuesta: data });
+    if (response.status === 400) testUtils.setSuccess(btn);
+});

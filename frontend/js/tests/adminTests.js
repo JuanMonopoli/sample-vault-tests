@@ -19,3 +19,13 @@
     testUtils.log(data);
     if (response.ok) testUtils.setSuccess(btn);
 });
+testUtils.createTestButton("Test Seguridad - Productor accediendo a Admin", async (btn) => {
+    await okLogin();
+    const token = localStorage.getItem('test_token');
+    const response = await fetch('/api/admin/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    testUtils.log(data);
+    if (response.status === 403) testUtils.setSuccess(btn);
+});
